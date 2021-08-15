@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../EzWin"
+		},
+    {
+      "path": "C:\\nim"
+    }
+	],
+	"settings": {}
+}
