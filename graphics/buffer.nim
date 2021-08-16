@@ -1,6 +1,20 @@
 import
-  # std/macros,
+  std/macros,
   opengl
+
+macro isHomogeneousTuple(n): bool =
+  if n.getType.typeKind == ntyTuple:
+    var t = n.getType
+    for i in 2 ..< t.len:
+      if t[i].getType.typeKind != t[i - 1].getType.typeKind:
+        return newLit(false)
+    result = newLit(true)
+  else:
+    result = newLit(false)
+
+proc numFields[T](x: T): int =
+  for _ in x.fields:
+    result.inc
 
 type
   GfxDataType* = enum
@@ -14,6 +28,7 @@ type
     typ*: GfxDataType
 
   Buffer* = object
+    attributes*: seq[Attribute]
     openGlId*: GLuint
 
 proc toGlEnum(dataType: GfxDataType): GLenum =
@@ -55,15 +70,25 @@ proc numBytes*(typ: GfxDataType): int =
 proc numBytes*(attribute: Attribute): int =
   attribute.count * attribute.typ.numBytes
 
-proc vertexNumBytes*(attributes: openArray[Attribute]): int =
-  for attribute in attributes:
+proc vertexNumBytes*(buffer: Buffer): int =
+  for attribute in buffer.attributes:
     result += attribute.numBytes
+
+proc getAttributes*[T](vertex: T): seq[Attribute] =
+  for attribute in vertex.fields:
+    if not attribute.isHomogeneousTuple:
+      raise newException(IOError, "Ensure that attributes are tuples with all fields as the same type.")
+    result.add Attribute(
+      count: attribute.numFields,
+      typ: attribute[0].typeof.toGfxDataType,
+    )
 
 proc select*(buffer: Buffer) =
   glBindBuffer(GL_ARRAY_BUFFER, buffer.openGlId)
 
-proc `data=`*[T](buffer: Buffer, data: openArray[T]) =
+proc `data=`*[T](buffer: var Buffer, data: openArray[T]) =
   if data.len > 0:
+    buffer.attributes = data[0].getAttributes
     buffer.select()
     var dataSeq = newSeq[T](data.len)
     for i, v in data:
@@ -75,20 +100,10 @@ proc `data=`*[T](buffer: Buffer, data: openArray[T]) =
       usage = GL_STATIC_DRAW,
     )
 
-proc `data=`*[T](buffer: Buffer, data: var seq[T]) =
-  if data.len > 0:
-    buffer.select()
-    glBufferData(
-      target = GL_ARRAY_BUFFER,
-      size = data.len * data[0].sizeof,
-      data = data[0].addr,
-      usage = GL_STATIC_DRAW,
-    )
-
-proc setLayout(buffer: var Buffer, attributes: openArray[Attribute]) =
-  let vertexNumBytes = attributes.vertexNumBytes
+proc useLayout*(buffer: var Buffer) =
+  let vertexNumBytes = buffer.vertexNumBytes
   var byteOffset = 0
-  for i, attribute in attributes:
+  for i, attribute in buffer.attributes:
     glEnableVertexAttribArray(i.GLuint)
     glVertexAttribPointer(
       index = i.GLuint,
@@ -106,73 +121,8 @@ proc setLayout(buffer: var Buffer, attributes: openArray[Attribute]) =
     )
     byteOffset += attribute.numBytes
 
-proc `layout=`*(buffer: var Buffer, attributes: openArray[Attribute]) =
-  buffer.setLayout(attributes)
-
 proc `=destroy`*(buffer: var Buffer) =
   glDeleteBuffers(1, buffer.openGlId.addr)
 
 proc initBuffer*(): Buffer =
   glGenBuffers(1, result.openGlId.addr)
-
-
-
-
-# macro makeAttributes*(args: varargs[untyped]): untyped =
-#   var
-#     stmts = nnkStmtListExpr.newTree()
-#     vertexSym = genSym(nskVar, "vertex")
-#     # byteOffsetSym = genSym(nskVar, "byteOffset")
-#     numArgs = args.len
-#     attributeSyms = newSeq[NimNode](numArgs)
-
-#   for i, arg in args:
-#     let attributeSym = genSym(nskLet, "attribute")
-#     attributeSyms[i] = attributeSym
-#     stmts.add quote do:
-#       let `attributeSym` = `arg`
-
-#   stmts.add quote do:
-#     var `vertexSym` = Vertex(
-#       attributes: newSeq[Attribute](`numArgs`)
-#     )
-
-#   for i, arg in args:
-#     let attributeSym = attributeSyms[i]
-#     stmts.add quote do:
-#       `vertexSym`.attributes[`i`] = Attribute(
-#         count: `attributeSym`.len,
-#         typ: `attributeSym`[0].typeof.toGfxDataType,
-#       )
-
-#   stmts.add quote do:
-#     `vertexSym`.data = alloc(`vertexSym`.numBytes)
-#     # var `byteOffsetSym` = 0
-
-#   for i, arg in args:
-#     let attributeSym = attributeSyms[i]
-#     stmts.add quote do:
-#       var dataPtr = cast[ptr `attributeSym`.typeof](`vertexSym`.data)
-#       dataPtr[] = `attributeSym`
-
-
-#   for i, arg in args:
-#     let attributeSym = attributeSyms[i]
-#     stmts.add quote do:
-#       var dataPtr = cast[ptr `attributeSym`.typeof](cast[int](`vertexSym`.data) + `byteOffsetSym`)
-#       dataPtr[] = `attributeSym`
-#     if i < args.len - 1:
-#       stmts.add quote do:
-#         `byteOffsetSym` += `attributeSym`.sizeof
-
-#   stmts.add quote do:
-#     `vertexSym`
-
-#   nnkBlockExpr.newTree(newEmptyNode(), stmts)
-
-
-# when isMainModule:
-#   echo makeAttributes(
-#     [2, float],
-#     [3, int],
-#   )

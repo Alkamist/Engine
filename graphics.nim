@@ -39,13 +39,11 @@ when isMainModule:
 
   var vertexBuffer = initBuffer()
   vertexBuffer.data = [
-    -0.5'f32, -0.5, 0.0,
-    0.0, 0.5, 0.0,
-    0.5, -0.5, 0.0,
+    ((-0.5, -0.5, 0.0), (5'i32, 5'i32)),
+    ((0.0, 0.5, 0.0), (5'i32, 5'i32)),
+    ((0.5, -0.5, 0.0), (5'i32, 5'i32)),
   ]
-  vertexBuffer.layout = [
-    Attribute(count: 3, typ: GfxDataType.F32),
-  ]
+  vertexBuffer.useLayout()
 
   while not wnd.shouldClose:
     wnd.pollEvents()
