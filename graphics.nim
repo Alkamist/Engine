@@ -1,99 +1,68 @@
-import
-  opengl,
-  ezwin/window,
-  graphics/[context, shader]
+#import graphics/buffer
 
-const vertexShader = """
-#version 330 core
-layout(location = 0) in vec4 position;
-void main() {
-  gl_Position = position;
-}
-"""
+# expandMacros:
+#   initVertex(
+#     [0.5'f32, -0.5, 0.0],
+#     [0.0],
+#     [5, 10],
+#   )
+# echo vertex.numBytes
+# for attribute in vertex.attributes:
+#   echo $attribute.typ & ": " & $attribute.count
 
-const fragmentShader = """
-#version 330 core
-layout(location = 0) out vec4 color;
-void main() {
-  color = vec4(1.0, 0.0, 0.0, 1.0);
-}
-"""
 
-when isMainModule:
-  var wnd = newWindow(
-    title = "Test Window",
-    x = 2.0,
-    y = 2.0,
-    width = 4.0,
-    height = 4.0,
-  )
 
-  var ctx = initContext(wnd.handle)
+# import
+#   opengl,
+#   ezwin/window,
+#   graphics/[context, shader]
 
-  let shdr = createShader(vertexShader, fragmentShader)
-  glUseProgram(shdr)
+# const vertexShader = """
+# #version 330 core
+# layout(location = 0) in vec4 position;
+# void main() {
+#   gl_Position = position;
+# }
+# """
 
-  var
-    vertexBuffer: cuint
-    vertices = [
-      0.5.float32, 0.5, 0.0, # top right
-      0.5, -0.5, 0.0, # bottom right
-      -0.5, -0.5, 0.0, # bottom left
-      -0.5, 0.5, 0.0, # top left
-    ]
+# const fragmentShader = """
+# #version 330 core
+# layout(location = 0) out vec4 color;
+# uniform vec4 u_Color;
+# void main() {
+#   color = u_Color;
+# }
+# """
 
-  glGenBuffers(
-    n = 1,
-    buffers = vertexBuffer.addr,
-  )
-  glBindBuffer(
-    target = GL_ARRAY_BUFFER,
-    buffer = vertexBuffer,
-  )
-  glBufferData(
-    target = GL_ARRAY_BUFFER,
-    size = vertices.len * float32.sizeof,
-    data = vertices.addr,
-    usage = GL_STATIC_DRAW,
-  )
-  glEnableVertexAttribArray(
-    index = 0
-  )
-  glVertexAttribPointer(
-    index = 0,
-    size = 3,
-    `type` = cGL_FLOAT,
-    normalized = GL_FALSE,
-    stride = float32.sizeof * 3,
-    `pointer` = cast[pointer](0),
-  )
+# when isMainModule:
+#   var wnd = newWindow(
+#     title = "Test Window",
+#     x = 2.0,
+#     y = 2.0,
+#     width = 4.0,
+#     height = 4.0,
+#   )
 
-  var
-    indexBuffer: cuint
-    indices = [
-      0.cuint, 1, 3, # first triangle
-      1, 2, 3, # second triangle
-    ]
+#   var ctx = initContext(wnd.handle)
 
-  glGenBuffers(
-    n = 1,
-    buffers = indexBuffer.addr,
-  )
-  glBindBuffer(
-    target = GL_ELEMENT_ARRAY_BUFFER,
-    buffer = indexBuffer,
-  )
-  glBufferData(
-    target = GL_ELEMENT_ARRAY_BUFFER,
-    size = indices.len * cuint.sizeof,
-    data = indices.addr,
-    usage = GL_STATIC_DRAW,
-  )
+#   let shdr = createShader(vertexShader, fragmentShader)
+#   glUseProgram(shdr)
 
-  while not wnd.shouldClose:
-    wnd.pollEvents()
-    glClear(GL_COLOR_BUFFER_BIT)
-    glDrawElements(GL_TRIANGLES, indices.len.GLsizei, GL_UNSIGNED_INT, nil)
-    ctx.swapBuffers()
+#   let colorLocation = glGetUniformLocation(shdr, "u_Color")
+#   glUniform4f(colorLocation, 0.2, 0.3, 0.8, 1.0)
 
-  glDeleteProgram(shdr)
+#   var vertices = initBuffer(
+#     [-0.5'f32, -0.5, 0.0],
+#     [0.0'f32, 0.5, 0.0],
+#     [0.5'f32, -0.5, 0.0],
+#   )
+#   vertices.defineAttributes()
+
+#   while not wnd.shouldClose:
+#     wnd.pollEvents()
+#     glClear(GL_COLOR_BUFFER_BIT)
+#     glDrawArrays(GL_TRIANGLES, 0, 3)
+#     # glDrawElements(GL_TRIANGLES, indices.len.GLsizei, GL_UNSIGNED_INT, nil)
+#     ctx.swapBuffers()
+
+#   glDeleteProgram(shdr)
