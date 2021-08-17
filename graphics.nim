@@ -1,7 +1,7 @@
 import
   opengl,
   ezwin/window,
-  graphics/[context, buffer, shader]
+  graphics/[renderer, buffer, shader]
 
 const vertexShader = """
 #version 330 core
@@ -21,7 +21,7 @@ void main() {
 """
 
 when isMainModule:
-  var wnd = newWindow(
+  var wndw = newWindow(
     title = "Test Window",
     x = 2.0,
     y = 2.0,
@@ -29,7 +29,8 @@ when isMainModule:
     height = 4.0,
   )
 
-  var ctx = initContext(wnd.handle)
+  var rndr = initRenderer(wndw.handle)
+  rndr.backgroundColor = rgb(16, 16, 16)
 
   let shdr = createShader(vertexShader, fragmentShader)
   glUseProgram(shdr)
@@ -39,17 +40,27 @@ when isMainModule:
 
   var vertexBuffer = initBuffer()
   vertexBuffer.data = [
-    ((-0.5, -0.5, 0.0), (5'i32, 5'i32)),
-    ((0.0, 0.5, 0.0), (5'i32, 5'i32)),
-    ((0.5, -0.5, 0.0), (5'i32, 5'i32)),
+    (-0.5, -0.5, 0.0),
+    (0.5, -0.5, 0.0),
+    (0.5, 0.5, 0.0),
+    (-0.5, 0.5, 0.0),
   ]
   vertexBuffer.useLayout()
 
-  while not wnd.shouldClose:
-    wnd.pollEvents()
-    glClear(GL_COLOR_BUFFER_BIT)
+  # var indexBuffer = initBuffer()
+  # indexBuffer.data = [
+  #   (0, 1, 2),
+  #   (2, 3, 0),
+  # ]
+  # var indexCount = 0
+  # for attribute in indexBuffer.attributes:
+  #   indexCount += attribute.count
+
+  while not wndw.shouldClose:
+    wndw.pollEvents()
+    rndr.clear()
     glDrawArrays(GL_TRIANGLES, 0, 3)
-    # glDrawElements(GL_TRIANGLES, indices.len.GLsizei, GL_UNSIGNED_INT, nil)
-    ctx.swapBuffers()
+    # glDrawElements(GL_TRIANGLES, indexCount.GLsizei, cGL_INT, nil)
+    rndr.swapBuffers()
 
   glDeleteProgram(shdr)

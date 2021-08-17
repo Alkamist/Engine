@@ -2,15 +2,31 @@ import
   std/macros,
   opengl
 
-macro isHomogeneousTuple(n): bool =
-  if n.getType.typeKind == ntyTuple:
-    var t = n.getType
-    for i in 2 ..< t.len:
-      if t[i].getType.typeKind != t[i - 1].getType.typeKind:
-        return newLit(false)
-    result = newLit(true)
-  else:
-    result = newLit(false)
+macro typeOfFirstField*(tupl): untyped =
+  tupl.getType[1].getType
+
+macro arrayType*(tupl, fieldType): untyped =
+  var t = tupl.getType
+  let arraySize = t.len - 1
+  result = nnkBracketExpr.newTree(
+    ident "array",
+    newIntLitNode(arraySize),
+    fieldType,
+  )
+
+template toArray*(tupl, fieldType): untyped =
+  var
+    arr: tupl.arrayType(fieldType)
+    i = 0
+  for field in tupl.fields:
+    arr[i] = field.fieldType
+    i.inc
+  arr
+
+template toArray*(tupl): untyped =
+  block:
+    type fieldType = tupl.typeOfFirstField
+    tupl.toArray(fieldType)
 
 proc numFields[T](x: T): int =
   for _ in x.fields:
@@ -74,14 +90,14 @@ proc vertexNumBytes*(buffer: Buffer): int =
   for attribute in buffer.attributes:
     result += attribute.numBytes
 
+proc toAttribute*[T](arr: openArray[T]): Attribute =
+  result.count = arr.len
+  result.typ = arr[0].typeof.toGfxDataType
+
 proc getAttributes*[T](vertex: T): seq[Attribute] =
-  for attribute in vertex.fields:
-    if not attribute.isHomogeneousTuple:
-      raise newException(IOError, "Ensure that attributes are tuples with all fields as the same type.")
-    result.add Attribute(
-      count: attribute.numFields,
-      typ: attribute[0].typeof.toGfxDataType,
-    )
+  let vertexAsArray = vertex.toArray
+  for value in vertexAsArray:
+    result.add fieldAsArray.toAttribute
 
 proc select*(buffer: Buffer) =
   glBindBuffer(GL_ARRAY_BUFFER, buffer.openGlId)
@@ -126,3 +142,9 @@ proc `=destroy`*(buffer: var Buffer) =
 
 proc initBuffer*(): Buffer =
   glGenBuffers(1, result.openGlId.addr)
+
+when isMainModule:
+  let vertex1 = (-0.5, -0.5, 0.0)
+  echo vertex1.getAttributes
+
+  # let vertex2 = (-0.5, -0.5, 0.0, (5, 1))

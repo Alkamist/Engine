@@ -1,15 +1,16 @@
 import
-  opengl, winim/lean
+  opengl, winim/lean,
+  ../color
 
 var openGlIsLoaded = false
 
 type
-  Context* = object
+  Renderer* = object
     hWnd*: HWND
     hdc*: HDC
     openGlContext*: HGLRC
 
-proc makeCurrent(context: var Context) =
+proc makeContextCurrent(renderer: var Renderer) =
   var pfd = PIXELFORMATDESCRIPTOR(
     nSize: PIXELFORMATDESCRIPTOR.sizeof.WORD,
     nVersion: 1,
@@ -23,36 +24,45 @@ proc makeCurrent(context: var Context) =
   pfd.cAlphaBits = 8
   pfd.iLayerType = PFD_MAIN_PLANE
 
-  context.hdc = GetDC(context.hWnd)
-  let format = ChoosePixelFormat(context.hdc, pfd.addr)
+  renderer.hdc = GetDC(renderer.hWnd)
+  let format = ChoosePixelFormat(renderer.hdc, pfd.addr)
   if format == 0:
     raise newException(OSError, "ChoosePixelFormat failed.")
 
-  if SetPixelFormat(context.hdc, format, pfd.addr) == 0:
+  if SetPixelFormat(renderer.hdc, format, pfd.addr) == 0:
     raise newException(OSError, "SetPixelFormat failed.")
 
-  var activeFormat = GetPixelFormat(context.hdc)
+  var activeFormat = GetPixelFormat(renderer.hdc)
   if activeFormat == 0:
     raise newException(OSError, "GetPixelFormat failed.")
 
-  if DescribePixelFormat(context.hdc, format, pfd.sizeof.UINT, pfd.addr) == 0:
+  if DescribePixelFormat(renderer.hdc, format, pfd.sizeof.UINT, pfd.addr) == 0:
     raise newException(OSError, "DescribePixelFormat failed.")
 
   if (pfd.dwFlags and PFD_SUPPORT_OPENGL) != PFD_SUPPORT_OPENGL:
     raise newException(OSError, "PFD_SUPPORT_OPENGL check failed.")
 
-  context.openGlContext = wglCreateContext(context.hdc)
-  if context.openGlContext == 0:
+  renderer.openGlContext = wglCreateContext(renderer.hdc)
+  if renderer.openGlContext == 0:
     raise newException(OSError, "wglCreateContext failed.")
 
-  wglMakeCurrent(context.hdc, context.openGlContext)
+  wglMakeCurrent(renderer.hdc, renderer.openGlContext)
 
-proc swapBuffers*(context: Context) =
-  SwapBuffers(context.hdc)
+proc `backgroundColor=`*(renderer: Renderer, color: Color) =
+  glClearColor(color.r / 255.0,
+               color.g / 255.0,
+               color.b / 255.0,
+               color.a)
 
-proc initContext*(handle: HWND): Context =
+proc clear*(renderer: Renderer) =
+  glClear(GL_COLOR_BUFFER_BIT)
+
+proc swapBuffers*(renderer: Renderer) =
+  SwapBuffers(renderer.hdc)
+
+proc initRenderer*(handle: HWND): Renderer =
   result.hWnd = handle
-  result.makeCurrent()
+  result.makeContextCurrent()
   if not openGlIsLoaded:
     opengl.loadExtensions()
     openGlIsLoaded = true
