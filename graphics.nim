@@ -40,10 +40,10 @@ when isMainModule:
 
   var vertexBuffer = initBuffer()
   vertexBuffer.data = [
-    (-0.5, -0.5, 0.0),
-    (0.5, -0.5, 0.0),
-    (0.5, 0.5, 0.0),
-    (-0.5, 0.5, 0.0),
+    [-0.5, -0.5, 0.0],
+    [0.5, -0.5, 0.0],
+    [0.5, 0.5, 0.0],
+    # (-0.5, 0.5, 0.0),
   ]
   vertexBuffer.useLayout()
 
