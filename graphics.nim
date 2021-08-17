@@ -1,7 +1,7 @@
 import
   opengl,
   ezwin/window,
-  graphics/[renderer, buffer, shader]
+  graphics/[context, renderer, gfxbuffer, shader, color]
 
 const vertexShader = """
 #version 330 core
@@ -29,7 +29,7 @@ when isMainModule:
     height = 4.0,
   )
 
-  var rndr = initRenderer(wndw.handle)
+  var rndr = initRenderer(initContext(wndw.handle))
   rndr.backgroundColor = rgb(16, 16, 16)
 
   let shdr = createShader(vertexShader, fragmentShader)
@@ -38,29 +38,24 @@ when isMainModule:
   let colorLocation = glGetUniformLocation(shdr, "u_Color")
   glUniform4f(colorLocation, 0.2, 0.3, 0.8, 1.0)
 
-  var vertexBuffer = initBuffer()
+  var vertexBuffer = initGfxBuffer(GfxBufferKind.Vertex)
   vertexBuffer.data = [
-    [-0.5, -0.5, 0.0],
-    [0.5, -0.5, 0.0],
-    [0.5, 0.5, 0.0],
-    # (-0.5, 0.5, 0.0),
+    [-0.5'f32, -0.5, 0.0],
+    [0.5'f32, -0.5, 0.0],
+    [0.5'f32, 0.5, 0.0],
+    [-0.5'f32, 0.5, 0.0],
   ]
-  vertexBuffer.useLayout()
 
-  # var indexBuffer = initBuffer()
-  # indexBuffer.data = [
-  #   (0, 1, 2),
-  #   (2, 3, 0),
-  # ]
-  # var indexCount = 0
-  # for attribute in indexBuffer.attributes:
-  #   indexCount += attribute.count
+  var indexBuffer = initGfxBuffer(GfxBufferKind.Index)
+  indexBuffer.data = [
+    [0'u32, 1, 2],
+    [2'u32, 3, 0],
+  ]
 
   while not wndw.shouldClose:
     wndw.pollEvents()
     rndr.clear()
-    glDrawArrays(GL_TRIANGLES, 0, 3)
-    # glDrawElements(GL_TRIANGLES, indexCount.GLsizei, cGL_INT, nil)
-    rndr.swapBuffers()
+    rndr.drawBuffer(vertexBuffer, indexBuffer)
+    rndr.swapFrames()
 
   glDeleteProgram(shdr)

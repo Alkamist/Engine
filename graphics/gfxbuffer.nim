@@ -3,21 +3,32 @@ import
   tupletoarray
 
 type
-  GfxDataType {.pure.} = enum
+  GfxBufferKind* {.pure.} = enum
+    Vertex,
+    Index,
+
+  GfxDataType* {.pure.} = enum
     Float,
     Int,
     UInt,
 
-  Attribute = object
+  Attribute* = object
     count*: int
     dataTypeNumBytes*: int
     dataType*: GfxDataType
 
   GfxBuffer* = object
+    kind*: GfxBufferKind
+    vertexCount*: int
     attributes*: seq[Attribute]
     openGlId*: GLuint
 
-proc toGlEnum(attribute: Attribute): GLenum =
+proc toGlEnum*(kind: GfxBufferKind): GLenum =
+  case kind:
+  of Vertex: GL_ARRAY_BUFFER
+  of Index: GL_ELEMENT_ARRAY_BUFFER
+
+proc toGlEnum*(attribute: Attribute): GLenum =
   case attribute.dataTypeNumBytes:
   of 1:
     case attribute.dataType:
@@ -62,6 +73,11 @@ proc vertexNumBytes*(buffer: GfxBuffer): int =
   for attribute in buffer.attributes:
     result += attribute.numBytes
 
+proc vertexNumValues*(buffer: GfxBuffer): int =
+  for attribute in buffer.attributes:
+    result += attribute.count
+  result *= buffer.vertexCount
+
 proc getAttributes*[T: tuple|array](vertex: T): seq[Attribute] =
   when vertex is array:
     for attribute in vertex:
@@ -80,10 +96,12 @@ proc getAttributes*[T: tuple|array](vertex: T): seq[Attribute] =
       else: raise newException(IOError, "When using a tuple vertex, ensure that all attributes are either tuples or arrays.")
 
 proc select*(buffer: GfxBuffer) =
-  glBindBuffer(GL_ARRAY_BUFFER, buffer.openGlId)
+  glBindBuffer(buffer.kind.toGlEnum, buffer.openGlId)
 
 proc `data=`*[T](buffer: var GfxBuffer, data: openArray[T]) =
   if data.len > 0:
+    buffer.vertexCount = data.len
+
     var dataSeq = newSeq[T](data.len)
     for i, v in data:
       dataSeq[i] = v
@@ -92,13 +110,14 @@ proc `data=`*[T](buffer: var GfxBuffer, data: openArray[T]) =
     buffer.select()
 
     glBufferData(
-      target = GL_ARRAY_BUFFER,
+      target = buffer.kind.toGlEnum,
       size = dataSeq.len * dataSeq[0].sizeof,
       data = dataSeq[0].addr,
       usage = GL_STATIC_DRAW,
     )
 
 proc useLayout*(buffer: var GfxBuffer) =
+  buffer.select()
   let vertexNumBytes = buffer.vertexNumBytes
   var byteOffset = 0
   for i, attribute in buffer.attributes:
@@ -122,7 +141,8 @@ proc useLayout*(buffer: var GfxBuffer) =
 proc `=destroy`*(buffer: var GfxBuffer) =
   glDeleteBuffers(1, buffer.openGlId.addr)
 
-proc initBuffer*(): GfxBuffer =
+proc initGfxBuffer*(kind: GfxBufferKind): GfxBuffer =
+  result.kind = kind
   glGenBuffers(1, result.openGlId.addr)
 
 proc initAttribute*(count: int,
