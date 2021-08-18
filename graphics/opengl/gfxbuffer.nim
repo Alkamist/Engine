@@ -1,6 +1,5 @@
-import
-  opengl,
-  tupletoarray
+import opengl
+import ../tupletoarray
 
 type
   GfxBufferKind* {.pure.} = enum

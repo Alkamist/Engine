@@ -31,7 +31,7 @@ void main()
 }
 """
 
-var wndw = newWindow(
+var window = newWindow(
   title = "Test Window",
   x = 2.0,
   y = 2.0,
@@ -39,17 +39,17 @@ var wndw = newWindow(
   height = 4.0,
 )
 
-wndw.onResize = proc =
+window.onResize = proc =
   glViewport(
     0.GLsizei, 0.GLsizei,
-    wndw.clientWidthPixels.GLsizei, wndw.clientHeightPixels.GLsizei
+    window.clientWidthPixels.GLsizei, window.clientHeightPixels.GLsizei
   )
 
-var rndr = initRenderer(initContext(wndw.handle))
-rndr.backgroundColor = graphics.rgb(16, 16, 16)
+var rndr = initRenderer(initContext(window.handle))
+rndr.backgroundColor = color(0.05, 0.05, 0.05, 1.0)
 
-let shdr = createShader(vertexShader, fragmentShader)
-glUseProgram(shdr)
+let shader = createShader(vertexShader, fragmentShader)
+glUseProgram(shader)
 
 var vertexBuffer = initGfxBuffer(GfxBufferKind.Vertex)
 vertexBuffer.data = [
@@ -86,13 +86,13 @@ glTexImage2D(
 )
 glGenerateMipmap(GL_TEXTURE_2D)
 
-while not wndw.shouldClose:
-  wndw.pollEvents()
+while not window.shouldClose:
+  window.pollEvents()
   rndr.clear()
   rndr.drawBuffer(vertexBuffer, indexBuffer)
   rndr.swapFrames()
 
-glDeleteProgram(shdr)
+glDeleteProgram(shader)
 
 
 
@@ -141,5 +141,5 @@ glDeleteProgram(shdr)
 #   [0.0'f32, 0.0, 1.0, 0.0],
 #   [0.0'f32, 0.0, 0.0, 1.0],
 # ]
-# glUniformMatrix4fv(glGetUniformLocation(shdr, "transform"), 1, GL_FALSE, cast[ptr GLfloat](transform[0].addr))
-# glUniformMatrix4fv(glGetUniformLocation(shdr, "projection"), 1, GL_FALSE, cast[ptr GLfloat](projection[0].addr))
+# glUniformMatrix4fv(glGetUniformLocation(shader, "transform"), 1, GL_FALSE, cast[ptr GLfloat](transform[0].addr))
+# glUniformMatrix4fv(glGetUniformLocation(shader, "projection"), 1, GL_FALSE, cast[ptr GLfloat](projection[0].addr))

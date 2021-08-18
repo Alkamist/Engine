@@ -21,9 +21,8 @@ proc compileShader*(kind: Glenum, source: string): GLuint =
 proc createShader*(vertex, fragment: string): GLuint =
   result = glCreateProgram()
 
-  let
-    vs = compileShader(GL_VERTEX_SHADER, vertex)
-    fs = compileShader(GL_FRAGMENT_SHADER, fragment)
+  let vs = compileShader(GL_VERTEX_SHADER, vertex)
+  let fs = compileShader(GL_FRAGMENT_SHADER, fragment)
 
   glAttachShader(result, vs)
   glAttachShader(result, fs)
