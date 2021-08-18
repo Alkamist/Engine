@@ -25,6 +25,14 @@ proc drawBuffer*(renderer: Renderer, vertices, indices: var GfxBuffer) =
     nil
   )
 
+proc drawBuffer*(renderer: Renderer, vertices: var GfxBuffer) =
+  vertices.useLayout()
+  glDrawArrays(
+    GL_TRIANGLES,
+    0,
+    vertices.numValues.GLsizei,
+  )
+
 proc swapFrames*(renderer: Renderer) =
   renderer.context.swapFrames()
 
