@@ -13,13 +13,13 @@ type
     UInt,
 
   Attribute* = object
-    count*: int
+    numValues*: int
     dataTypeNumBytes*: int
     dataType*: GfxDataType
 
   GfxBuffer* = object
     kind*: GfxBufferKind
-    vertexCount*: int
+    numValues*: int
     attributes*: seq[Attribute]
     openGlId*: GLuint
 
@@ -62,12 +62,12 @@ proc toGfxDataType*(t: typedesc): GfxDataType =
   else: raise newException(IOError, "Improper type for toGfxDataType.")
 
 proc toAttribute*[T](arr: openArray[T]): Attribute =
-  result.count = arr.len
+  result.numValues = arr.len
   result.dataTypeNumBytes = arr[0].sizeof
   result.dataType = arr[0].typeof.toGfxDataType
 
 proc numBytes*(attribute: Attribute): int =
-  attribute.count * attribute.dataTypeNumBytes
+  attribute.numValues * attribute.dataTypeNumBytes
 
 proc vertexNumBytes*(buffer: GfxBuffer): int =
   for attribute in buffer.attributes:
@@ -75,8 +75,8 @@ proc vertexNumBytes*(buffer: GfxBuffer): int =
 
 proc vertexNumValues*(buffer: GfxBuffer): int =
   for attribute in buffer.attributes:
-    result += attribute.count
-  result *= buffer.vertexCount
+    result += attribute.numValues
+  result *= buffer.numValues
 
 proc getAttributes*[T: tuple|array](vertex: T): seq[Attribute] =
   when vertex is array:
@@ -100,7 +100,7 @@ proc select*(buffer: GfxBuffer) =
 
 proc `data=`*[T](buffer: var GfxBuffer, data: openArray[T]) =
   if data.len > 0:
-    buffer.vertexCount = data.len
+    buffer.numValues = data.len
 
     var dataSeq = newSeq[T](data.len)
     for i, v in data:
@@ -125,7 +125,7 @@ proc useLayout*(buffer: var GfxBuffer) =
     glVertexAttribPointer(
       index = i.GLuint,
         # the 0 based index of the attribute
-      size = attribute.count.GLint,
+      size = attribute.numValues.GLint,
         # the number of values in the attribute
       `type` = attribute.toGlEnum,
         # the type of value present in the attribute
@@ -145,10 +145,10 @@ proc initGfxBuffer*(kind: GfxBufferKind): GfxBuffer =
   result.kind = kind
   glGenBuffers(1, result.openGlId.addr)
 
-proc initAttribute*(count: int,
+proc initAttribute*(numValues: int,
                     dataTypeNumBytes: int,
                     dataType: GfxDataType): Attribute =
-  result.count = count
+  result.numValues = numValues
   result.dataTypeNumBytes = dataTypeNumBytes
   result.dataType = dataType
 
