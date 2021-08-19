@@ -1,5 +1,4 @@
-import
-  opengl
+import opengl
 
 proc compileShader*(kind: Glenum, source: string): GLuint =
   result = glCreateShader(kind)

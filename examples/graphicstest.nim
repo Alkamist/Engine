@@ -1,6 +1,6 @@
 import opengl
-import pixie
 import ezwin
+import pixie
 import ../graphics
 
 const vertexShader = """
@@ -46,24 +46,24 @@ window.onResize = proc =
   )
 
 var renderer = initRenderer(initContext(window.handle))
-renderer.backgroundColor = color(0.05, 0.05, 0.05, 1.0)
+renderer.backgroundColor = (0.05, 0.05, 0.05, 1.0)
 
 let shader = createShader(vertexShader, fragmentShader)
 glUseProgram(shader)
 
-var vertexBuffer = initGpuBuffer(GpuBufferKind.Vertex)
-vertexBuffer.data = [
-  (vec3(0.5,  0.5, 0.0), vec2(1.0, 1.0)),
-  (vec3(0.5, -0.5, 0.0), vec2(1.0, 0.0)),
-  (vec3(-0.5, -0.5, 0.0), vec2(0.0, 0.0)),
-  (vec3(-0.5,  0.5, 0.0), vec2(0.0, 1.0)),
+var vertexBuffer = genVertexBuffer[(array[3, float32], array[2, float32])]()
+vertexBuffer.writeData [
+  ([0.5f,  0.5, 0.0], [1.0f, 1.0]),
+  ([0.5f, -0.5, 0.0], [1.0f, 0.0]),
+  ([-0.5f, -0.5, 0.0], [0.0f, 0.0]),
+  ([-0.5f,  0.5, 0.0], [0.0f, 1.0]),
 ]
 
-var indexBuffer = initIndexBuffer[uint32]()
-indexBuffer.writeData([
+var indexBuffer = genIndexBuffer[uint32]()
+indexBuffer.writeData [
   0'u32, 1, 2,
   2, 3, 0,
-])
+]
 
 var textureId: GLuint
 glGenTextures(1, textureId.addr)
