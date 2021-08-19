@@ -59,11 +59,15 @@ macro getAttributes*(vertexTypeDesc: typedesc): untyped =
 
   for i in 1 ..< attributeCount:
     var attributeType = vertexType[i]
+
     if attributeType.typeKind == ntyArray:
       var arrayRangeHigh = attributeType[1][2]
       var attributeKind = attributeType[2].toVertexAttributeKind
       attributes.add quote do:
         VertexAttribute(kind: `attributeKind`.VertexAttributeKind, valueCount: `arrayRangeHigh` + 1)
+
+    else:
+      raise newException(IOError, "Unsupported type for vertex attribute.")
 
   result = nnkBracket.newTree()
   for attribute in attributes:
