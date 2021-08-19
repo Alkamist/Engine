@@ -45,25 +45,25 @@ window.onResize = proc =
     window.clientWidthPixels.GLsizei, window.clientHeightPixels.GLsizei
   )
 
-var rndr = initRenderer(initContext(window.handle))
-rndr.backgroundColor = color(0.05, 0.05, 0.05, 1.0)
+var renderer = initRenderer(initContext(window.handle))
+renderer.backgroundColor = color(0.05, 0.05, 0.05, 1.0)
 
 let shader = createShader(vertexShader, fragmentShader)
 glUseProgram(shader)
 
-var vertexBuffer = initGfxBuffer(GfxBufferKind.Vertex)
+var vertexBuffer = initGpuBuffer(GpuBufferKind.Vertex)
 vertexBuffer.data = [
-  ([0.5'f32,  0.5, 0.0], [1.0'f32, 1.0]),
-  ([0.5'f32, -0.5, 0.0], [1.0'f32, 0.0]),
-  ([-0.5'f32, -0.5, 0.0], [0.0'f32, 0.0]),
-  ([-0.5'f32,  0.5, 0.0], [0.0'f32, 1.0]),
+  (vec3(0.5,  0.5, 0.0), vec2(1.0, 1.0)),
+  (vec3(0.5, -0.5, 0.0), vec2(1.0, 0.0)),
+  (vec3(-0.5, -0.5, 0.0), vec2(0.0, 0.0)),
+  (vec3(-0.5,  0.5, 0.0), vec2(0.0, 1.0)),
 ]
 
-var indexBuffer = initGfxBuffer(GfxBufferKind.Index)
-indexBuffer.data = [
-  [0'u32, 1, 2],
-  [2'u32, 3, 0],
-]
+var indexBuffer = initIndexBuffer[uint32]()
+indexBuffer.writeData([
+  0'u32, 1, 2,
+  2, 3, 0,
+])
 
 var textureId: GLuint
 glGenTextures(1, textureId.addr)
@@ -88,9 +88,9 @@ glGenerateMipmap(GL_TEXTURE_2D)
 
 while not window.shouldClose:
   window.pollEvents()
-  rndr.clear()
-  rndr.drawBuffer(vertexBuffer, indexBuffer)
-  rndr.swapFrames()
+  renderer.clear()
+  renderer.drawBuffer(vertexBuffer, indexBuffer)
+  renderer.swapFrames()
 
 glDeleteProgram(shader)
 

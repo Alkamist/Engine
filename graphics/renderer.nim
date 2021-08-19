@@ -1,2 +1,2 @@
-import opengl/[renderer, context, gfxbuffer, shader]
-export renderer, context, gfxbuffer, shader
+import opengl/[renderer, context, gpubuffer, indexbuffer, shader]
+export renderer, context, gpubuffer, indexbuffer, shader

@@ -1,12 +1,18 @@
 import opengl
+import vmath
 import ../tupletoarray
 
+type SomeVec*[T] = GVec2[T] | GVec3[T] | GVec4[T]
+proc toArray*[T](vec: GVec2[T]): array[2, T] = [vec.x, vec.y]
+proc toArray*[T](vec: GVec3[T]): array[3, T] = [vec.x, vec.y, vec.z]
+proc toArray*[T](vec: GVec4[T]): array[4, T] = [vec.x, vec.y, vec.z, vec.w]
+
 type
-  GfxBufferKind* {.pure.} = enum
+  GpuBufferKind* {.pure.} = enum
     Vertex,
     Index,
 
-  GfxDataType* {.pure.} = enum
+  GpuDataType* {.pure.} = enum
     Float,
     Int,
     UInt,
@@ -14,15 +20,15 @@ type
   Attribute* = object
     numValues*: int
     dataTypeNumBytes*: int
-    dataType*: GfxDataType
+    dataType*: GpuDataType
 
-  GfxBuffer* = object
-    kind*: GfxBufferKind
+  GpuBuffer* = object
+    kind*: GpuBufferKind
     numValues*: int
     attributes*: seq[Attribute]
     openGlId*: GLuint
 
-proc toGlEnum*(kind: GfxBufferKind): GLenum =
+proc toGlEnum*(kind: GpuBufferKind): GLenum =
   case kind:
   of Vertex: GL_ARRAY_BUFFER
   of Index: GL_ELEMENT_ARRAY_BUFFER
@@ -54,7 +60,7 @@ proc toGlEnum*(attribute: Attribute): GLenum =
 
   raise newException(IOError, "Could not convert Attribute to GLEnum.")
 
-proc toGfxDataType*(t: typedesc): GfxDataType =
+proc toGfxDataType*(t: typedesc): GpuDataType =
   if t is SomeFloat: Float
   elif t is SomeSignedInt: Int
   elif t is SomeUnsignedInt: UInt
@@ -68,16 +74,16 @@ proc toAttribute*[T](arr: openArray[T]): Attribute =
 proc numBytes*(attribute: Attribute): int =
   attribute.numValues * attribute.dataTypeNumBytes
 
-proc vertexNumBytes*(buffer: GfxBuffer): int =
+proc vertexNumBytes*(buffer: GpuBuffer): int =
   for attribute in buffer.attributes:
     result += attribute.numBytes
 
-proc vertexNumValues*(buffer: GfxBuffer): int =
+proc vertexNumValues*(buffer: GpuBuffer): int =
   for attribute in buffer.attributes:
     result += attribute.numValues
   result *= buffer.numValues
 
-proc getAttributes*[T: tuple|array](vertex: T): seq[Attribute] =
+proc getAttributes*[T: tuple|array|SomeVec[SomeNumber]](vertex: T): seq[Attribute] =
   when vertex is array:
     for attribute in vertex:
       when attribute is array: result.add attribute.toAttribute
@@ -92,12 +98,16 @@ proc getAttributes*[T: tuple|array](vertex: T): seq[Attribute] =
     for attribute in vertex.fields:
       when attribute is array: result.add attribute.toAttribute
       elif attribute is tuple: result.add attribute.toArray.toAttribute
+      elif attribute is SomeVec[SomeNumber]: result.add attribute.toArray.toAttribute
       else: raise newException(IOError, "When using a tuple vertex, ensure that all attributes are either tuples or arrays.")
 
-proc select*(buffer: GfxBuffer) =
+  elif vertex is SomeVec[SomeNumber]:
+    result.add vertex.toArray.toAttribute
+
+proc select*(buffer: GpuBuffer) =
   glBindBuffer(buffer.kind.toGlEnum, buffer.openGlId)
 
-proc `data=`*[T](buffer: var GfxBuffer, data: openArray[T]) =
+proc `data=`*[T](buffer: var GpuBuffer, data: openArray[T]) =
   if data.len > 0:
     buffer.numValues = data.len
 
@@ -115,7 +125,7 @@ proc `data=`*[T](buffer: var GfxBuffer, data: openArray[T]) =
       usage = GL_STATIC_DRAW,
     )
 
-proc useLayout*(buffer: var GfxBuffer) =
+proc useLayout*(buffer: var GpuBuffer) =
   buffer.select()
   let vertexNumBytes = buffer.vertexNumBytes
   var byteOffset = 0
@@ -137,16 +147,16 @@ proc useLayout*(buffer: var GfxBuffer) =
     )
     byteOffset += attribute.numBytes
 
-proc `=destroy`*(buffer: var GfxBuffer) =
+proc `=destroy`*(buffer: var GpuBuffer) =
   glDeleteBuffers(1, buffer.openGlId.addr)
 
-proc initGfxBuffer*(kind: GfxBufferKind): GfxBuffer =
+proc initGpuBuffer*(kind: GpuBufferKind): GpuBuffer =
   result.kind = kind
   glGenBuffers(1, result.openGlId.addr)
 
 proc initAttribute*(numValues: int,
                     dataTypeNumBytes: int,
-                    dataType: GfxDataType): Attribute =
+                    dataType: GpuDataType): Attribute =
   result.numValues = numValues
   result.dataTypeNumBytes = dataTypeNumBytes
   result.dataType = dataType
