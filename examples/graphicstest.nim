@@ -1,6 +1,5 @@
 import opengl
 import ezwin
-import pixie
 import ../graphics
 
 const vertexShader = """
@@ -48,9 +47,6 @@ window.onResize = proc =
 var renderer = initRenderer(initContext(window.handle))
 renderer.backgroundColor = (0.05, 0.05, 0.05, 1.0)
 
-let shader = createShader(vertexShader, fragmentShader)
-glUseProgram(shader)
-
 var vertexBuffer = genVertexBuffer[(array[3, float32], array[2, float32])]()
 vertexBuffer.writeData [
   ([0.5f,  0.5, 0.0], [1.0f, 1.0]),
@@ -65,26 +61,17 @@ indexBuffer.writeData [
   2, 3, 0,
 ]
 
-var textureId: GLuint
-glGenTextures(1, textureId.addr)
-glBindTexture(GL_TEXTURE_2D, textureId)
-glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
-glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
-glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
-glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
-var texture = readImage("examples/concrete.png")
-glTexImage2D(
-  GL_TEXTURE_2D,
-  0,
-  GL_RGBA.GLint,
-  texture.width.GLsizei,
-  texture.height.GLsizei,
-  0,
-  GL_RGBA,
-  GL_UNSIGNED_BYTE,
-  texture.data[0].addr,
-)
-glGenerateMipmap(GL_TEXTURE_2D)
+var texture = genTexture()
+texture.loadImage("examples/concrete.png")
+texture.minifyFilter = TextureMinifyFilter.Nearest
+texture.magnifyFilter = TextureMagnifyFilter.Nearest
+texture.wrapS = TextureWrapMode.Repeat
+texture.wrapT = TextureWrapMode.Repeat
+texture.writeImage()
+texture.generateMipmap()
+
+let shader = createShader(vertexShader, fragmentShader)
+glUseProgram(shader)
 
 while not window.shouldClose:
   window.pollEvents()
