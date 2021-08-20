@@ -9,7 +9,7 @@ proc `backgroundColor=`*(renderer: Renderer, color: tuple[r, g, b, a: float]) =
   glClearColor(color.r, color.g, color.b, color.a)
 
 proc clear*(renderer: Renderer) =
-  glClear(GL_COLOR_BUFFER_BIT)
+  glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
 
 proc drawBuffer*[V, I](renderer: Renderer,
                        vertices: VertexBuffer[V],
@@ -40,3 +40,4 @@ proc swapFrames*(renderer: Renderer) =
 
 proc initRenderer*(context: Context): Renderer =
   result.context = context
+  glEnable(GL_DEPTH_TEST)
