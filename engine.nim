@@ -1,9 +1,11 @@
+import opengl
+export opengl
+
 import engine/[context, renderer, shader,
                vertexbuffer, indexbuffer,
-               texture, gmath, timestep,
-               functions, mesh]
-
+               texture, timestep,
+               functions, gmath]
 export context, renderer, shader,
        vertexbuffer, indexbuffer,
-       texture, gmath, timestep,
-       functions, mesh
+       texture, timestep,
+       functions, gmath

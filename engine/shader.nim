@@ -25,12 +25,22 @@ proc compileShaderSrc(kind: Glenum, source: string): GLuint =
 proc select*(shader: Shader) =
   glUseProgram(shader.openGlId)
 
-proc setUniform*(shader: Shader, name: string, value: var Mat4) =
+proc setUniform*(shader: Shader, name: string, value: Vec3) =
   shader.select()
+  var valueVar = value
+  glUniform3fv(
+    glGetUniformLocation(shader.openGlId, name),
+    1,
+    cast[ptr GLfloat](valueVar.addr),
+  )
+
+proc setUniform*(shader: Shader, name: string, value: Mat4) =
+  shader.select()
+  var valueVar = value
   glUniformMatrix4fv(
     glGetUniformLocation(shader.openGlId, name),
     1, GL_FALSE,
-    cast[ptr GLfloat](value.addr),
+    cast[ptr GLfloat](valueVar.addr),
   )
 
 proc `=destroy`*(shader: var Shader) =

@@ -5,7 +5,7 @@ import ../engine
 const vertexShader = """
 #version 330 core
 layout (location = 0) in vec3 aPos;
-layout (location = 1) in vec2 aTexCoord;
+layout (location = 2) in vec2 aTexCoord;
 
 out vec2 TexCoord;
 
@@ -26,11 +26,15 @@ out vec4 FragColor;
 
 in vec2 TexCoord;
 
+uniform vec3 objectColor;
+uniform vec3 lightColor;
+
 uniform sampler2D ourTexture;
 
 void main()
 {
-    FragColor = texture(ourTexture, TexCoord);
+  vec3 lighting = lightColor * objectColor;
+  FragColor = vec4(lighting, 1.0) * texture(ourTexture, TexCoord);
 }
 """
 
@@ -77,10 +81,12 @@ mesh.indices.writeData [
   3, 2, 6,
   6, 7, 3,
 ]
-mesh.texture.loadImage("barrel_side.png")
+mesh.texture.loadImage("examples/barrel_side.png")
 mesh.texture.writeImage()
 mesh.texture.generateMipmap()
 shader.setUniform("transform", mesh.transform)
+shader.setUniform("objectColor", vec3(1.0, 1.0, 1.0))
+shader.setUniform("lightColor", vec3(1.0, 1.0, 1.0))
 
 var projection: Mat4 = perspective[float32](90.0, window.clientAspectRatio, 0.01, 1000.0)
 shader.setUniform("projection", projection)

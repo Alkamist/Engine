@@ -1,5 +1,5 @@
 import opengl
-import context, vertexbuffer, indexbuffer, mesh
+import context, vertexbuffer, indexbuffer
 
 type
   Renderer* = object
@@ -31,9 +31,6 @@ proc drawBuffer*[V](renderer: Renderer,
     0,
     vertices.len.GLsizei,
   )
-
-proc drawMesh*(renderer: Renderer, mesh: Mesh) =
-  renderer.drawBuffer(mesh.vertices, mesh.indices)
 
 proc swapFrames*(renderer: Renderer) =
   renderer.context.swapFrames()
