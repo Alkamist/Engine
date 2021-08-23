@@ -12,7 +12,8 @@ template x*[T](m: GMat4[T]): T = m[3, 0]
 template y*[T](m: GMat4[T]): T = m[3, 1]
 template z*[T](m: GMat4[T]): T = m[3, 2]
 
-{.push inline.}
+proc normal*[T](v: GVec2[T]): GVec2[T] =
+  vec2(-v.y, v.x).normalize
 
 proc position*[T](m: GMat4[T]): GVec3[T] =
   result.x = m.x
@@ -32,5 +33,3 @@ proc identity*(): Mat4 =
     0.0, 0.0, 1.0, 0.0,
     0.0, 0.0, 0.0, 1.0,
   )
-
-{.pop.}

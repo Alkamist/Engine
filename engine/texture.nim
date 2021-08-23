@@ -23,7 +23,7 @@ type
 
   Texture* = object
     openGlId*: GLuint
-    image: Image
+    image*: Image
 
 proc select*(texture: Texture) =
   glBindTexture(GL_TEXTURE_2D, texture.openGlId)
@@ -71,3 +71,11 @@ proc generateMipmap*(texture: Texture) =
 
 proc genTexture*(): Texture =
   glGenTextures(1, result.openGlId.addr)
+
+proc newTexture*(width, height: int): Texture =
+  result = genTexture()
+  result.image = newImage(width, height)
+  result.minifyFilter = TextureMinifyFilter.Nearest
+  result.magnifyFilter = TextureMagnifyFilter.Nearest
+  result.wrapS = TextureWrapMode.Repeat
+  result.wrapT = TextureWrapMode.Repeat

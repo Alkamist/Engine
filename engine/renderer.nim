@@ -1,11 +1,16 @@
 import opengl
+import chroma
 import context, vertexbuffer, indexbuffer
 
 type
   Renderer* = object
     context*: Context
+    backgroundColor: Color
 
-proc `backgroundColor=`*(renderer: Renderer, color: tuple[r, g, b, a: float]) =
+proc backgroundColor*(renderer: Renderer): Color =
+  renderer.backgroundColor
+
+proc `backgroundColor=`*(renderer: Renderer, color: Color) =
   glClearColor(color.r, color.g, color.b, color.a)
 
 proc clear*(renderer: Renderer) =
