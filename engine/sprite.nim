@@ -11,9 +11,13 @@ layout (location = 1) in vec2 aTexCoord;
 
 out vec2 TexCoord;
 
+uniform mat4 projection;
+uniform mat4 view;
+uniform mat4 transform;
+
 void main()
 {
-  gl_Position = vec4(aPos, 1.0f);
+  gl_Position = projection * view * transform * vec4(aPos, 1.0f);
   TexCoord = aTexCoord;
 }
 """
@@ -38,13 +42,52 @@ type
   SpriteIndex = uint8
 
   Sprite* = ref object
-    position*: Vec2
-    dimensions*: Vec2
     backgroundColor*: Color
     shader*: Shader
     texture*: Texture
-    vertices: VertexBuffer[SpriteVertex]
-    indices: IndexBuffer[SpriteIndex]
+    vertices*: VertexBuffer[SpriteVertex]
+    indices*: IndexBuffer[SpriteIndex]
+    projection: Mat4
+    view: Mat4
+    transform: Mat4
+
+proc widthPixels*(sprite: Sprite): int = sprite.texture.image.width
+proc heightPixels*(sprite: Sprite): int = sprite.texture.image.height
+
+proc projection*(sprite: Sprite): Mat4 = sprite.projection
+proc view*(sprite: Sprite): Mat4 = sprite.view
+proc transform*(sprite: Sprite): Mat4 = sprite.transform
+
+proc `projection=`*(sprite: Sprite, value: Mat4) =
+  sprite.projection = value
+  sprite.shader.setUniform("projection", value)
+
+proc `view=`*(sprite: Sprite, value: Mat4) =
+  sprite.view = value
+  sprite.shader.setUniform("view", value)
+
+proc `transform=`*(sprite: Sprite, value: Mat4) =
+  sprite.transform = value
+  sprite.shader.setUniform("transform", value)
+
+proc viewAtPixelScale*(sprite: Sprite, viewportWidth, viewportHeight: int) =
+  sprite.`view=` lookAt(
+    eye = vec3(0.0, 0.0, 1.0),
+    center = vec3(0.0, 0.0, 0.0),
+    up = vec3(0.0, 1.0, 0.0),
+  ) * vec3(
+    sprite.widthPixels.float / viewportWidth.float,
+    sprite.heightPixels.float / viewportHeight.float,
+    1.0,
+  ).scale
+
+proc loadFile*(sprite: Sprite, file: string) =
+  sprite.texture.loadFile(file)
+  sprite.texture.writeToGpu()
+
+proc useImage*(sprite: Sprite, image: Image) =
+  sprite.texture.image = image
+  sprite.texture.writeToGpu()
 
 proc draw*(sprite: Sprite) =
   drawTriangles(
@@ -54,10 +97,10 @@ proc draw*(sprite: Sprite) =
     sprite.texture,
   )
 
-proc newSprite*(width, height: int): Sprite =
+proc newSprite*(): Sprite =
   result = Sprite()
   result.shader = initShader(vertexShader, fragmentShader)
-  result.texture = newTexture(width, height)
+  result.texture = newTexture(1, 1)
   result.vertices = initVertexBuffer[SpriteVertex]()
   result.vertices.writeToGpu [
     ([-1.0f, -1.0, 0.0], [0.0f, 1.0]),
@@ -70,3 +113,6 @@ proc newSprite*(width, height: int): Sprite =
     0'u8, 1, 2,
     2, 3, 0
   ]
+  result.`projection=` ortho[float32](-1.0, 1.0, -1.0, 1.0, 0.1, 1000.0)
+  result.`transform=` vec3(1.0, 1.0, 1.0).scale
+  result.`view=` lookAt(vec3(0.0, 0.0, 1.0), vec3(0.0, 0.0, 0.0), vec3(0.0, 1.0, 0.0))

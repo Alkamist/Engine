@@ -15,6 +15,9 @@ proc enableAlphaBlend* =
   glEnable(GL_BLEND)
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
+proc enableDepthTesting* =
+  glEnable(GL_DEPTH_TEST)
+
 proc setViewport*(x, y, width, height: int) =
   glViewport(
     x.GLsizei, y.GLsizei,

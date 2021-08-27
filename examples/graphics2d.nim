@@ -1,39 +1,25 @@
 import ezwin
-import ../engine
+import ../engine as gfx
 
 var window = newWindow("Test Window")
-var glContext = initContext window.handle
+var gfxContext = gfx.initContext(window.handle)
 
-engine.enableAlphaBlend()
+gfx.enableAlphaBlend()
+gfx.enableDepthTesting()
 
-var sprite = newSprite(256, 256)
-sprite.texture.image = readImage("examples/barrel_side.png")
-sprite.texture.writeToGpu()
-
-var sprite2 = newSprite(256, 256)
-sprite2.texture.clear()
-sprite2.texture.image.fillPath(
-  """
-    M 60 90
-    A 40 40 90 0 1 100 60
-    A 40 40 90 0 1 180 60
-    Q 180 120 100 180
-    Q 20 120 20 60
-    z
-  """,
-  color(0.7, 0.7, 0.1, 0.8).rgba
-)
-sprite2.texture.writeToGpu()
+var sprite = newSprite()
+sprite.loadFile("examples/barrel_side.png")
+sprite.viewAtPixelScale(window.clientWidth, window.clientHeight)
 
 proc draw =
-  engine.clearBackground()
-  engine.clearDepthBuffer()
+  gfx.clearBackground()
+  gfx.clearDepthBuffer()
   sprite.draw()
-  sprite2.draw()
-  glContext.swapBuffers()
+  gfxContext.swapBuffers()
 
 window.onResize = proc =
-  engine.setViewport(0, 0, window.clientWidth, window.clientHeight)
+  gfx.setViewport(0, 0, window.clientWidth, window.clientHeight)
+  sprite.viewAtPixelScale(window.clientWidth, window.clientHeight)
   draw()
 
 window.onDraw = proc =
