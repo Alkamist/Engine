@@ -1,11 +1,15 @@
 import opengl
 export opengl
 
-import engine/[context, renderer, shader,
-               vertexbuffer, indexbuffer,
-               texture, timestep,
-               functions, gmath]
-export context, renderer, shader,
-       vertexbuffer, indexbuffer,
-       texture, timestep,
-       functions, gmath
+import pixie
+export pixie
+
+import vmath
+export vmath
+
+import engine/[context, functions, shader,
+               indexbuffer, vertexbuffer, sprite,
+               texture]
+export context, functions, shader,
+       indexbuffer, vertexbuffer, sprite,
+       texture

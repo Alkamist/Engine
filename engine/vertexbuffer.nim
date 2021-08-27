@@ -76,7 +76,7 @@ macro getAttributes*(vertexTypeDesc: typedesc): untyped =
 proc select*(buffer: VertexBuffer) =
   glBindBuffer(GL_ARRAY_BUFFER, buffer.openGlId)
 
-proc writeData*[T](buffer: var VertexBuffer[T], data: openArray[T]) =
+proc writeToGpu*[T](buffer: var VertexBuffer[T], data: openArray[T]) =
   var dataSeq = newSeq[T](data.len)
   for i, v in data:
     dataSeq[i] = v
@@ -117,5 +117,5 @@ proc selectLayout*[T](buffer: VertexBuffer[T]) =
 proc `=destroy`*[T](buffer: var VertexBuffer[T]) =
   glDeleteBuffers(1, buffer.openGlId.addr)
 
-proc genVertexBuffer*[T](): VertexBuffer[T] =
+proc initVertexBuffer*[T](): VertexBuffer[T] =
   glGenBuffers(1, result.openGlId.addr)

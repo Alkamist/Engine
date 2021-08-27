@@ -47,7 +47,7 @@ proc makeCurrent(context: var Context) =
 
   wglMakeCurrent(context.hdc, context.hglrc)
 
-proc swapFrames*(context: Context) =
+proc swapBuffers*(context: Context) =
   SwapBuffers(context.hdc)
 
 proc initContext*(handle: HWND): Context =

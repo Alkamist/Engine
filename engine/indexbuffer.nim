@@ -1,21 +1,21 @@
-import std/macros
 import opengl
 
 type
-  IndexBuffer*[T: uint8|uint16|uint32] = object
+  IndexType* = uint8 | uint16 | uint32
+
+  IndexBuffer*[T: IndexType] = object
     len*: int
     openGlId*: GLuint
 
-proc typeToGlEnum*[T](buffer: IndexBuffer[T]): GLenum =
+proc typeToGlEnum*[T: IndexType](buffer: IndexBuffer[T]): GLenum =
   when T is uint8: result = cGL_UNSIGNED_BYTE
   elif T is uint16: result = cGL_UNSIGNED_SHORT
   elif T is uint32: result = GL_UNSIGNED_INT
-  else: error "Unsupported index buffer type for typeToGlEnum."
 
 proc select*(buffer: IndexBuffer) =
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffer.openGlId)
 
-proc writeData*[T](buffer: var IndexBuffer, data: openArray[T]) =
+proc writeToGpu*[T: IndexType](buffer: var IndexBuffer[T], data: openArray[T]) =
   var dataSeq = newSeq[T](data.len)
   for i, v in data:
     dataSeq[i] = v
@@ -30,8 +30,8 @@ proc writeData*[T](buffer: var IndexBuffer, data: openArray[T]) =
     usage = GL_STATIC_DRAW,
   )
 
-proc `=destroy`*[T](buffer: var IndexBuffer[T]) =
+proc `=destroy`*[T: IndexType](buffer: var IndexBuffer[T]) =
   glDeleteBuffers(1, buffer.openGlId.addr)
 
-proc genIndexBuffer*[T](): IndexBuffer[T] =
+proc initIndexBuffer*[T: IndexType](): IndexBuffer[T] =
   glGenBuffers(1, result.openGlId.addr)

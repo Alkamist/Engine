@@ -23,7 +23,16 @@ type
 
   Texture* = object
     openGlId*: GLuint
+    backgroundColor*: Color
     image*: Image
+
+proc clear*(texture: Texture) =
+  texture.image.fill(texture.backgroundColor)
+
+proc resize*(texture: Texture, width, height: int) =
+  texture.image.width = width
+  texture.image.height = height
+  texture.image.data.setLen(width * height)
 
 proc select*(texture: Texture) =
   glBindTexture(GL_TEXTURE_2D, texture.openGlId)
@@ -48,10 +57,7 @@ proc `wrapR=`*(texture: Texture, mode: TextureWrapMode) =
   texture.select()
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, mode.GLint)
 
-proc loadImage*(texture: var Texture, file: string) =
-  texture.image = readImage(file)
-
-proc writeImage*(texture: Texture) =
+proc writeToGpu*(texture: Texture) =
   texture.select()
   glTexImage2D(
     GL_TEXTURE_2D,
@@ -69,11 +75,12 @@ proc generateMipmap*(texture: Texture) =
   texture.select()
   glGenerateMipmap(GL_TEXTURE_2D)
 
-proc genTexture*(): Texture =
+proc generateTexture*(): Texture =
   glGenTextures(1, result.openGlId.addr)
 
 proc newTexture*(width, height: int): Texture =
-  result = genTexture()
+  result = generateTexture()
+  result.backgroundColor = color(0.0, 0.0, 0.0, 0.0)
   result.image = newImage(width, height)
   result.minifyFilter = TextureMinifyFilter.Nearest
   result.magnifyFilter = TextureMagnifyFilter.Nearest
