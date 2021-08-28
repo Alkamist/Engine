@@ -1,16 +1,19 @@
 import ../engine/gmath
 
-type
-  Vec3* = object
-    x*, y*, z*: float32
+var a = vector3(1.0, 1.0, 0.0)
+# var b = vector3(-1.0, 0.0, 0.0)
 
-block:
-  let a = [1.0, 2.0, 3.0]
-  echo a.mapIt(it.sin)
-  echo a.length
-  echo a + a
+echo a.asType(float64).x.typeof
 
-block:
-  let a = Vec3(x: 1.0, y: 2.0, z: 3.0)
-  echo a.mapIt(it.sin)
-  echo a.length
+# echo a.linearInterpolate(wall, 0.5)
+# echo a.reflect(wall)
+# echo a.bounce(wall)
+# echo a.slide(wall)
+# echo a.isNormalized
+# echo wall.isNormalized
+
+# echo a.mapIt(it.sin)
+# echo a.length
+# echo a + a
+# echo -a
+
