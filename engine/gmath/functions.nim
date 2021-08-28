@@ -1,4 +1,4 @@
-proc snapped*[T: SomeFloat](value, step: T): T =
+proc snap*[T: SomeFloat](value, step: T): T =
   if step != 0.0:
     (value / step + 0.5).floor * step
   else:

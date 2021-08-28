@@ -1,33 +1,51 @@
 import std/math
 import functions
 
-# AXIS_X = 0 --- Enumerated value for the X axis. Returned by max_axis and min_axis.
-# AXIS_Y = 1 --- Enumerated value for the Y axis. Returned by max_axis and min_axis.
-# AXIS_Z = 2 --- Enumerated value for the Z axis. Returned by max_axis and min_axis.
-# ZERO = Vector3( 0, 0, 0 ) --- Zero vector, a vector with all components set to 0.
-# ONE = Vector3( 1, 1, 1 ) --- One vector, a vector with all components set to 1.
-# INF = Vector3( inf, inf, inf ) --- Infinity vector, a vector with all components set to @GDScript.INF.
-# LEFT = Vector3( -1, 0, 0 ) --- Left unit vector. Represents the local direction of left, and the global direction of west.
-# RIGHT = Vector3( 1, 0, 0 ) --- Right unit vector. Represents the local direction of right, and the global direction of east.
-# UP = Vector3( 0, 1, 0 ) --- Up unit vector.
-# DOWN = Vector3( 0, -1, 0 ) --- Down unit vector.
-# FORWARD = Vector3( 0, 0, -1 ) --- Forward unit vector. Represents the local direction of forward, and the global direction of north.
-# BACK = Vector3( 0, 0, 1 ) --- Back unit vector. Represents the local direction of back, and the global direction of south.
-
 type
   GVector3*[T] = object
-    x*, y*, z*: T
+    elements: array[3, T]
 
   Vector3* = GVector3[float32]
+  DVector3* = GVector3[float64]
+  IVector3* = GVector3[int]
+
+{.push inline.}
+
+template x*[T](a: GVector3[T]): untyped = a.elements[0]
+template y*[T](a: GVector3[T]): untyped = a.elements[1]
+template z*[T](a: GVector3[T]): untyped = a.elements[2]
+
+template `x=`*[T](a: GVector3[T], v: T): untyped = a.elements[0] = v
+template `y=`*[T](a: GVector3[T], v: T): untyped = a.elements[1] = v
+template `z=`*[T](a: GVector3[T], v: T): untyped = a.elements[2] = v
+
+template `[]`*[T](a: GVector3[T], i: int): untyped = a.elements[i]
+template `[]=`*[T](a: GVector3[T], i: int, v: T): untyped = a.elements[i] = v
 
 proc gvector3*[T](x, y, z: T): GVector3[T] =
-  GVector3[T](x: x, y: y, z: z)
+  result.x = x
+  result.y = y
+  result.z = z
 
-proc vector3*(x, y, z: float): Vector3 =
-  gvector3[float32](x, y, z)
+proc vector3*(x, y, z: float32): Vector3 =
+  result.x = x
+  result.y = y
+  result.z = z
+
+proc dvector3*(x, y, z: float64): DVector3 =
+  result.x = x
+  result.y = y
+  result.z = z
+
+proc ivector3*(x, y, z: int): IVector3 =
+  result.x = x
+  result.y = y
+  result.z = z
 
 proc asType*[T](v: GVector3[T], to: typedesc): GVector3[to] =
-  gvector3[to](v.x.to, v.y.to, v.z.to)
+  result.x = v.x.to
+  result.y = v.y.to
+  result.z = v.z.to
 
 const vector3Zero* = vector3(0.0, 0.0, 0.0)
 const vector3One* = vector3(1.0, 1.0, 1.0)
@@ -158,15 +176,15 @@ proc linearInterpolate*[T: SomeFloat](a, b: GVector3[T], v: T): GVector3[T] =
   a * (1.0 - v) + b * v
 
 proc slide*[T](a, normal: GVector3[T]): GVector3[T] =
-  ## Must be normalized.
+  assert(normal.isNormalized, "The other vector must be normalized.")
   a - normal * a.dot(normal)
 
 proc reflect*[T](a, normal: GVector3[T]): GVector3[T] =
-  ## Must be normalized.
+  assert(normal.isNormalized, "The other vector must be normalized.")
   normal * a.dot(normal) * 2.0 - a
 
 proc bounce*[T](a, normal: GVector3[T]): GVector3[T] =
-  ## Must be normalized.
+  assert(normal.isNormalized, "The other vector must be normalized.")
   -a.reflect(normal)
 
 proc project*[T](a, b: GVector3[T]): GVector3[T] =
@@ -184,3 +202,5 @@ proc limitLength*[T](a: GVector3[T], limit: T): GVector3[T] =
   if length > 0.0 and limit < length:
     result /= length
     result *= limit
+
+{.pop.}
