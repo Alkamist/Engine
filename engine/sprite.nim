@@ -11,13 +11,11 @@ layout (location = 1) in vec2 aTexCoord;
 
 out vec2 TexCoord;
 
-uniform mat4 projection;
-uniform mat4 view;
-uniform mat4 transform;
+uniform mat4 matrix;
 
 void main()
 {
-  gl_Position = projection * view * transform * vec4(aPos, 1.0f);
+  gl_Position = matrix * vec4(aPos, 1.0f);
   TexCoord = aTexCoord;
 }
 """
@@ -37,49 +35,52 @@ void main()
 }
 """
 
+proc invert[T](v: T): T =
+  if v != 0.0:
+    result = 1.0 / v
+
+template x*[T](m: GMat4[T]): T = m[3, 0]
+template y*[T](m: GMat4[T]): T = m[3, 1]
+template z*[T](m: GMat4[T]): T = m[3, 2]
+template xScale*[T](m: GMat4[T]): T = m[0, 0]
+template yScale*[T](m: GMat4[T]): T = m[1, 1]
+template zScale*[T](m: GMat4[T]): T = m[2, 2]
+
 type
   SpriteVertex = (array[3, float32], array[2, float32])
   SpriteIndex = uint8
 
   Sprite* = ref object
+    position*: Vec3
     backgroundColor*: Color
     shader*: Shader
     texture*: Texture
     vertices*: VertexBuffer[SpriteVertex]
     indices*: IndexBuffer[SpriteIndex]
-    projection: Mat4
-    view: Mat4
-    transform: Mat4
+    projection*: Mat4
+    view*: Mat4
+    transform*: Mat4
 
-proc widthPixels*(sprite: Sprite): int = sprite.texture.image.width
-proc heightPixels*(sprite: Sprite): int = sprite.texture.image.height
+proc width*(sprite: Sprite): int = sprite.texture.image.width
+proc height*(sprite: Sprite): int = sprite.texture.image.height
 
-proc projection*(sprite: Sprite): Mat4 = sprite.projection
-proc view*(sprite: Sprite): Mat4 = sprite.view
-proc transform*(sprite: Sprite): Mat4 = sprite.transform
+proc updateMatrix*(sprite: Sprite) =
+  let matrix = sprite.projection * sprite.view * sprite.transform
+  let xPixelShift = sprite.projection.xScale.invert mod 2 * sprite.projection.xScale
+  let yPixelShift = sprite.projection.yScale.invert mod 2 * sprite.projection.yScale
+  let pixelPerfectMatrix = matrix * vec3(xPixelShift, yPixelShift, 0.0).translate
+  sprite.shader.setUniform("matrix", pixelPerfectMatrix)
 
-proc `projection=`*(sprite: Sprite, value: Mat4) =
-  sprite.projection = value
-  sprite.shader.setUniform("projection", value)
-
-proc `view=`*(sprite: Sprite, value: Mat4) =
-  sprite.view = value
-  sprite.shader.setUniform("view", value)
-
-proc `transform=`*(sprite: Sprite, value: Mat4) =
-  sprite.transform = value
-  sprite.shader.setUniform("transform", value)
-
-proc viewAtPixelScale*(sprite: Sprite, viewportWidth, viewportHeight: int) =
-  sprite.`view=` lookAt(
-    eye = vec3(0.0, 0.0, 1.0),
-    center = vec3(0.0, 0.0, 0.0),
-    up = vec3(0.0, 1.0, 0.0),
-  ) * vec3(
-    sprite.widthPixels.float / viewportWidth.float,
-    sprite.heightPixels.float / viewportHeight.float,
-    1.0,
-  ).scale
+# proc viewAtPixelScale*(sprite: Sprite, viewportWidth, viewportHeight: int) =
+#   sprite.`view=` lookAt(
+#     eye = vec3(0.0, 0.0, 1.0),
+#     center = vec3(0.0, 0.0, 0.0),
+#     up = vec3(0.0, 1.0, 0.0),
+#   ) * vec3(
+#     sprite.widthPixels.float / viewportWidth.float,
+#     sprite.heightPixels.float / viewportHeight.float,
+#     1.0,
+#   ).scale
 
 proc loadFile*(sprite: Sprite, file: string) =
   sprite.texture.loadFile(file)
@@ -113,6 +114,6 @@ proc newSprite*(): Sprite =
     0'u8, 1, 2,
     2, 3, 0
   ]
-  result.`projection=` ortho[float32](-1.0, 1.0, -1.0, 1.0, 0.1, 1000.0)
-  result.`transform=` vec3(1.0, 1.0, 1.0).scale
-  result.`view=` lookAt(vec3(0.0, 0.0, 1.0), vec3(0.0, 0.0, 0.0), vec3(0.0, 1.0, 0.0))
+  result.projection = ortho[float32](-1.0, 1.0, -1.0, 1.0, 0.1, 1000.0)
+  result.transform = vec3(1.0, 1.0, 1.0).scale
+  result.view = lookAt(vec3(0.0, 0.0, 1.0), vec3(0.0, 0.0, 0.0), vec3(0.0, 1.0, 0.0))
