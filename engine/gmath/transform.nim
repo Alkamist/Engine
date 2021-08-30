@@ -5,4 +5,5 @@ type
     basis*: GBasis[T]
     origin*: GVector3[T]
 
-  Transform* = GTransform[float32]
+  Transform* = GTransform[Vector3Type]
+
