@@ -1,7 +1,7 @@
 import ../engine/gmath
 
 # var a = vector3(1.0, 2.0, 3.0)
-var b = vector3(1.0, 1.0, 0.0)
+# var b = vector3(1.0, 1.0, 0.0)
 
 # echo a.linearInterpolate(b, 0.5)
 # echo a.reflect(b)
@@ -13,11 +13,4 @@ var b = vector3(1.0, 1.0, 0.0)
 # echo a + a
 # echo -a
 
-var a = basis()
-a.setElements(
-  2.0, 0.0, 0.0,
-  0.0, 1.0, 0.0,
-  0.0, 0.0, 1.0,
-)
-
-echo a ~= a
+# var a = basis()

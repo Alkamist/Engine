@@ -158,7 +158,7 @@ proc lengthSquared*[T](a: GVector3[T]): T =
 proc isNormalized*[T](a: GVector3[T]): bool =
   a.lengthSquared ~= 1.0
 
-proc normalize*[T](a: GVector3[T]): GVector3[T] =
+proc normalize*[T](a: GVector3[T]) =
   let lengthSquared = a.lengthSquared
   if lengthSquared == 0:
     vector3Zero.asType(T)
@@ -172,7 +172,7 @@ proc distanceTo*[T](at, to: GVector3[T]): T =
 proc distanceSquaredTo*[T](at, to: GVector3[T]): T =
   (at - to).lengthSquared
 
-proc linearInterpolate*[T: SomeFloat](a, b: GVector3[T], v: T): GVector3[T] =
+proc lerp*[T: SomeFloat](a, b: GVector3[T], v: T): GVector3[T] =
   a * (1.0 - v) + b * v
 
 proc slide*[T](a, normal: GVector3[T]): GVector3[T] =
