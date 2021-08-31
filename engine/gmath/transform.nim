@@ -1,9 +1,6 @@
-import basis, vector3
+import defs, basis, vector3
 
 type
-  GTransform*[T] = object
-    basis*: GBasis[T]
-    origin*: GVector3[T]
-
-  Transform* = GTransform[Vector3Type]
-
+  Transform* = object
+    origin*: Vector3
+    basis*: Basis
