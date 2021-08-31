@@ -120,6 +120,10 @@ proc orthonormalized*(a: Transform): Transform =
   result = a
   result.orthonormalize()
 
+proc transform*(): Transform =
+  result.basis = basis()
+  result.origin = vector3()
+
 proc transform*(basis: Basis, origin: Vector3): Transform =
   result.basis = basis
   result.origin = origin

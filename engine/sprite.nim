@@ -1,5 +1,4 @@
 import opengl
-import vmath
 import pixie
 import functions, vertexbuffer, indexbuffer,
        shader, texture

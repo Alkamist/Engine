@@ -1,4 +1,5 @@
 import opengl
+import vmath
 import gmath
 
 type
@@ -37,6 +38,20 @@ proc setUniform*(shader: Shader, name: string, value: Vec3) =
 proc setUniform*(shader: Shader, name: string, value: Mat4) =
   shader.select()
   var valueVar = value
+  glUniformMatrix4fv(
+    glGetUniformLocation(shader.openGlId, name),
+    1, GL_FALSE,
+    cast[ptr GLfloat](valueVar.addr),
+  )
+
+proc setUniform*(shader: Shader, name: string, value: Transform) =
+  shader.select()
+  var valueVar = [
+    value.basis[0][0], value.basis[0][1], value.basis[0][2], 0.0,
+    value.basis[1][0], value.basis[1][1], value.basis[1][2], 0.0,
+    value.basis[2][0], value.basis[2][1], value.basis[2][2], 0.0,
+    value.origin.x,    value.origin.y,    value.origin.z,    1.0,
+  ]
   glUniformMatrix4fv(
     glGetUniformLocation(shader.openGlId, name),
     1, GL_FALSE,

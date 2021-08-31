@@ -81,7 +81,7 @@ proc generateMipmap*(texture: Texture) =
 proc generateTexture*(): Texture =
   glGenTextures(1, result.openGlId.addr)
 
-proc newTexture*(width, height: int): Texture =
+proc initTexture*(width, height: int): Texture =
   result = generateTexture()
   result.backgroundColor = color(0.0, 0.0, 0.0, 0.0)
   result.image = newImage(width, height)
